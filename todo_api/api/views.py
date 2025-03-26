@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics
 from .models import Todo
-from .serializers import TodoSerializer, UserSerializer
+from .serializers import TodoSerializer, UserSerializer, APIUserSerializer, APITodoSerializer
 from django.contrib.auth.models import User
 from rest_framework import permissions
 from .permissions import IsOwnerReadOnly
@@ -10,7 +10,7 @@ from .permissions import IsOwnerReadOnly
 #This is the Get and Post view for Todos
 class ToDoListView(generics.ListCreateAPIView):
     queryset= Todo.objects.all()
-    serializer_class = TodoSerializer
+    serializer_class = APITodoSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerReadOnly]
 
     def perform_create(self, serializer):
@@ -20,9 +20,9 @@ class ToDoListView(generics.ListCreateAPIView):
 #This is the view for the Users
 class OwnerListView(generics.ListAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = APIUserSerializer
 
 class SingleOwnerView(generics.RetrieveAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = APIUserSerializer
 
