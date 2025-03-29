@@ -3,6 +3,7 @@ from django.http import Http404
 from rest_framework import generics, permissions, response, status, authentication
 from rest_framework.authtoken.models import Token
 from .models import Todo
+from .paginations import TodoPagination
 from .serializers import UserSerializer, TodoSerializer
 from django.contrib.auth.models import User
 from rest_framework.views import APIView
@@ -17,8 +18,11 @@ class ToDoListView(APIView):
 
     def get(self, request):
         todos = Todo.objects.filter(owner=request.user)
-        serializer = TodoSerializer(todos, many=True)
-        return response.Response(serializer.data)
+
+        paginator = TodoPagination()
+        paginated_todos = paginator.paginate_queryset(todos, request)
+        serializer = TodoSerializer(paginated_todos, many=True)
+        return paginator.get_paginated_response(data=serializer.data)
 
     def post(self, request):
         serializer = TodoSerializer(data=request.data)
