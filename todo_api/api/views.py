@@ -87,6 +87,8 @@ class SingleOwnerView(APIView):
 
 #These are the views for registering and getting users their tokens
 class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
