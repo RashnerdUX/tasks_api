@@ -16,17 +16,11 @@ class ToDoListView(APIView):
     authentication_classes = [authentication.TokenAuthentication]
 
     def get(self, request):
-        print(f"User authenticated: {request.user.is_authenticated}")
-        print(f"User: {request.user}")
-
-        todos = Todo.objects.all()
+        todos = Todo.objects.filter(owner=request.user)
         serializer = TodoSerializer(todos, many=True)
         return response.Response(serializer.data)
 
     def post(self, request):
-        print(f"User authenticated: {request.user.is_authenticated}")
-        print(f"User: {request.user}")
-
         serializer = TodoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(owner=request.user)
@@ -34,40 +28,58 @@ class ToDoListView(APIView):
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TodoDetail(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerReadOnly]
+    authentication_classes = [authentication.TokenAuthentication]
 
     #This will query the database for a single item using primary key
     def get_object(self, pk):
         try:
-            todo = Todo.objects.get(pk=pk)
+            todo = Todo.objects.get(pk=pk, owner=self.request.user)
             return todo
         except:
             raise Http404
 
     def get(self, request, pk):
-        todo = self.get_object(pk=pk)
-        serialized = TodoSerializer(instance=todo)
-        return response.Response(data=serialized.data, status=200)
+        try:
+            todo = self.get_object(pk=pk)
+            serialized = TodoSerializer(instance=todo)
+            return response.Response(data=serialized.data, status=200)
+        except:
+            return response.Response(data={"message":"Task does not exist for this user"}, status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request, pk):
-        todo = self.get_object(pk=pk)
-        serialized = TodoSerializer(todo, data=request.data)
-        if serialized.is_valid():
-            serialized.save()
-            return response.Response(data=serialized.data, status=201)
-        return response.Response(data=serialized.errors, status=400)
+        try:
+            todo = self.get_object(pk=pk)
+            serialized = TodoSerializer(todo, data=request.data)
+            if serialized.is_valid():
+                serialized.save()
+                return response.Response(data=serialized.data, status=201)
+            return response.Response(data=serialized.errors, status=400)
+        except:
+            serialized = TodoSerializer(data=request.data)
+            if serialized.is_valid():
+                serialized.save(id=pk, owner=request.user)
+                return response.Response(data=serialized.data, status=status.HTTP_201_CREATED)
+            return response.Response(data=serialized.errors, status=404)
 
     def patch(self, request, pk):
-        todo = self.get_object(pk=pk)
-        serialized = TodoSerializer(todo, data=request.data, partial=True)
-        if serialized.is_valid():
-            serialized.save()
-            return response.Response(serialized.data, status=200)
-        return response.Response(serialized.errors, status=400)
+        try:
+            todo = self.get_object(pk=pk)
+            serialized = TodoSerializer(todo, data=request.data, partial=True)
+            if serialized.is_valid():
+                serialized.save()
+                return response.Response(serialized.data, status=200)
+            return response.Response(serialized.errors, status=400)
+        except:
+            return response.Response(data={"message":"No task to update"}, status=404)
 
     def delete(self, request, pk):
-        todo = self.get_object(pk=pk)
-        todo.delete()
-        return response.Response(data={"message":f"The item with the id {pk} has been deleted"},status=201)
+        try:
+            todo = self.get_object(pk=pk)
+            todo.delete()
+            return response.Response(data={"message":f"The item with the id {pk} has been deleted"},status=201)
+        except:
+            return response.Response(data={"message":"The item doesn't exist or user isn't authorized to delete it"}, status=404)
 
 #This is the view for the Users
 class OwnerListView(APIView):
