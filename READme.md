@@ -2,6 +2,8 @@
 
 A RESTful API for managing todo lists built with Django and Django REST Framework.
 
+Link to Project Brief - https://roadmap.sh/projects/todo-list-api
+
 ## Overview
 
 This Todo API allows users to create, read, update, and delete todo items. The API supports user authentication with token-based authorization, ensuring that users can only access and modify their own todo items.
