@@ -19,9 +19,10 @@ class APITodoSerializer(serializers.Serializer):
 
 
 class APIUserSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+    id = serializers.IntegerField(read_only=True)
     username = serializers.CharField()
     email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
     todos = APITodoSerializer(many=True, read_only=True)
 
     def create(self, validated_data):
