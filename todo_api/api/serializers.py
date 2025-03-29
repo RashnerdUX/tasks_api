@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Todo
 from django.contrib.auth.models import User
 
-class APITodoSerializer(serializers.Serializer):
+class TodoSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     title =serializers.CharField(max_length=30)
     description = serializers.CharField(max_length=300)
@@ -18,12 +18,12 @@ class APITodoSerializer(serializers.Serializer):
         return instance
 
 
-class APIUserSerializer(serializers.Serializer):
+class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     username = serializers.CharField()
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
-    todos = APITodoSerializer(many=True, read_only=True)
+    todos = TodoSerializer(many=True, read_only=True)
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)

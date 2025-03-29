@@ -1,12 +1,9 @@
 from django.contrib.auth import authenticate
 from django.http import Http404
-from django.shortcuts import render
-from environs import ValidationError
 from rest_framework import generics, permissions, response, status, authentication
 from rest_framework.authtoken.models import Token
-
 from .models import Todo
-from .serializers import APIUserSerializer, APITodoSerializer
+from .serializers import UserSerializer, TodoSerializer
 from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from .permissions import IsOwnerReadOnly
@@ -23,14 +20,14 @@ class ToDoListView(APIView):
         print(f"User: {request.user}")
 
         todos = Todo.objects.all()
-        serializer = APITodoSerializer(todos, many=True)
+        serializer = TodoSerializer(todos, many=True)
         return response.Response(serializer.data)
 
     def post(self, request):
         print(f"User authenticated: {request.user.is_authenticated}")
         print(f"User: {request.user}")
 
-        serializer = APITodoSerializer(data=request.data)
+        serializer = TodoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(owner=request.user)
             return response.Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -48,12 +45,12 @@ class TodoDetail(APIView):
 
     def get(self, request, pk):
         todo = self.get_object(pk=pk)
-        serialized = APITodoSerializer(instance=todo)
+        serialized = TodoSerializer(instance=todo)
         return response.Response(data=serialized.data, status=200)
 
     def put(self, request, pk):
         todo = self.get_object(pk=pk)
-        serialized = APITodoSerializer(todo, data=request.data)
+        serialized = TodoSerializer(todo, data=request.data)
         if serialized.is_valid():
             serialized.save()
             return response.Response(data=serialized.data, status=201)
@@ -61,7 +58,7 @@ class TodoDetail(APIView):
 
     def patch(self, request, pk):
         todo = self.get_object(pk=pk)
-        serialized = APITodoSerializer(todo, data=request.data, partial=True)
+        serialized = TodoSerializer(todo, data=request.data, partial=True)
         if serialized.is_valid():
             serialized.save()
             return response.Response(serialized.data, status=200)
@@ -76,13 +73,13 @@ class TodoDetail(APIView):
 class OwnerListView(APIView):
     def get(self, request):
         users = User.objects.all()
-        serializer = APIUserSerializer(users, many=True)
+        serializer = UserSerializer(users, many=True)
         return response.Response(serializer.data)
 
 class SingleOwnerView(APIView):
     def get(self, request, pk):
         user = get_object_or_404(User, pk=pk)
-        serializer = APIUserSerializer(user)
+        serializer = UserSerializer(user)
         return response.Response(serializer.data)
 
 #These are the views for registering and getting users their tokens
@@ -105,7 +102,7 @@ class LoginView(APIView):
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
     def post(self, request):
-        user = APIUserSerializer(data=request.data)
+        user = UserSerializer(data=request.data)
         if user.is_valid():
             user.save()
             return response.Response(data=user.data, status=status.HTTP_201_CREATED)
