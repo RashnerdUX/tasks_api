@@ -26,7 +26,7 @@ class APIUserSerializer(serializers.Serializer):
     todos = APITodoSerializer(many=True, read_only=True)
 
     def create(self, validated_data):
-        return User.objects.create(**validated_data)
+        return User.objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get("title", instance.title)
